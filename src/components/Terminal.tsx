@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TerminalOutput, Task } from '../types/Task';
 import { loadTasks, addTask, toggleTask, deleteTask, clearAllTasks } from '../utils/localStorage';
-import { Terminal as TerminalIcon } from 'lucide-react';
+import { Terminal as TerminalIcon, Search } from 'lucide-react';
 
 interface TerminalProps {
   onTasksChange: () => void;
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
 }
 
-const Terminal: React.FC<TerminalProps> = ({ onTasksChange }) => {
+const Terminal: React.FC<TerminalProps> = ({ onTasksChange, searchTerm, onSearchChange }) => {
   const [output, setOutput] = useState<TerminalOutput[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -76,6 +78,7 @@ const Terminal: React.FC<TerminalProps> = ({ onTasksChange }) => {
         addOutput('output', '  delete <id>    - Delete a task');
         addOutput('output', '  clear          - Clear the terminal');
         addOutput('output', '  reset          - Delete all tasks');
+        addOutput('output', '  search <term>  - Search tasks');
         addOutput('output', '  help           - Show this help');
         break;
 
@@ -173,6 +176,27 @@ const Terminal: React.FC<TerminalProps> = ({ onTasksChange }) => {
         onTasksChange();
         break;
 
+      case 'search':
+        if (!argString) {
+          onSearchChange('');
+          addOutput('output', 'Search cleared. Showing all tasks.');
+        } else {
+          onSearchChange(argString);
+          const tasks = loadTasks();
+          const filteredTasks = tasks.filter(task => 
+            task.text.toLowerCase().includes(argString.toLowerCase())
+          );
+          addOutput('output', `Searching for: "${argString}"`);
+          addOutput('output', `Found ${filteredTasks.length} matching task(s):`);
+          if (filteredTasks.length > 0) {
+            filteredTasks.forEach((task, index) => {
+              const originalIndex = tasks.findIndex(t => t.id === task.id);
+              addOutput('output', formatTask(task, originalIndex));
+            });
+          }
+        }
+        break;
+
       default:
         addOutput('error', `Unknown command: ${cmd}. Type "help" for available commands.`);
         break;
@@ -213,9 +237,23 @@ const Terminal: React.FC<TerminalProps> = ({ onTasksChange }) => {
   return (
     <div className="h-full bg-black text-green-400 font-mono p-4 flex flex-col">
         {/* Terminal Header */}
-        <div className="flex items-center gap-2 mb-4 text-green-300">
+        <div className="flex items-center justify-between mb-4 text-green-300">
+          <div className="flex items-center gap-2">
           <TerminalIcon size={20} />
           <span className="text-sm">Daily Task Manager - Terminal Interface</span>
+          </div>
+          
+          {/* Search Input */}
+          <div className="flex items-center gap-2">
+            <Search size={16} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search tasks..."
+              className="bg-gray-800 border border-green-500 rounded px-2 py-1 text-xs text-green-400 placeholder-green-600 focus:outline-none focus:border-green-300"
+            />
+          </div>
         </div>
 
         {/* Terminal Output */}
@@ -254,6 +292,7 @@ const Terminal: React.FC<TerminalProps> = ({ onTasksChange }) => {
         {/* Help Text */}
         <div className="mt-4 text-xs text-green-600">
           <p>• Use ↑/↓ arrow keys to navigate command history</p>
+          <p>• Use search box or "search <term>" command to filter tasks</p>
           <p>• Click anywhere to focus the terminal</p>
           <p>• All tasks are saved locally in your browser</p>
         </div>

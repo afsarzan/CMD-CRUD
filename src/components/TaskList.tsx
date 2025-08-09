@@ -1,16 +1,23 @@
 import React from 'react';
 import { Task } from '../types/Task';
-import { Terminal as TerminalIcon } from 'lucide-react';
+import { Terminal as TerminalIcon, Search } from 'lucide-react';
 
 interface TaskListProps {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask }) => {
-  const completedTasks = tasks.filter(task => task.completed);
-  const pendingTasks = tasks.filter(task => !task.completed);
+const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask, searchTerm, onSearchChange }) => {
+  // Filter tasks based on search term
+  const filteredTasks = searchTerm 
+    ? tasks.filter(task => task.text.toLowerCase().includes(searchTerm.toLowerCase()))
+    : tasks;
+    
+  const completedTasks = filteredTasks.filter(task => task.completed);
+  const pendingTasks = filteredTasks.filter(task => !task.completed);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -66,9 +73,23 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask }
   return (
     <div className="h-full bg-black text-green-400 font-mono flex flex-col border-l border-green-500">
       {/* Terminal Header */}
-      <div className="flex items-center gap-2 p-4 border-b border-green-500 text-green-300">
+      <div className="flex items-center justify-between p-4 border-b border-green-500 text-green-300">
+        <div className="flex items-center gap-2">
         <TerminalIcon size={20} />
         <span className="text-sm">Task List - Status Monitor</span>
+        </div>
+        
+        {/* Search Input */}
+        <div className="flex items-center gap-2">
+          <Search size={16} />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Filter tasks..."
+            className="bg-gray-800 border border-green-500 rounded px-2 py-1 text-xs text-green-400 placeholder-green-600 focus:outline-none focus:border-green-300 w-32"
+          />
+        </div>
       </div>
 
       {/* Status Bar */}
@@ -76,19 +97,34 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask }
         <div className="text-xs space-y-1">
           <div className="text-yellow-400">SYSTEM STATUS:</div>
           <div className="text-green-400">
-            TOTAL: {tasks.length} | PENDING: {pendingTasks.length} | COMPLETED: {completedTasks.length}
+            TOTAL: {tasks.length} | FILTERED: {filteredTasks.length} | PENDING: {pendingTasks.length} | COMPLETED: {completedTasks.length}
           </div>
+          {searchTerm && (
+            <div className="text-blue-400">
+              SEARCH: "{searchTerm}" | MATCHES: {filteredTasks.length}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Task Display */}
       <div className="flex-1 overflow-y-auto p-4 bg-gray-900">
-        {tasks.length === 0 ? (
+        {filteredTasks.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-green-600 font-mono text-sm space-y-2">
-              <div>NO TASKS FOUND</div>
-              <div className="text-xs">Use terminal to add tasks</div>
-              <div className="text-xs text-green-700">$ add &lt;task description&gt;</div>
+              {searchTerm ? (
+                <>
+                  <div>NO MATCHING TASKS</div>
+                  <div className="text-xs">No tasks match "{searchTerm}"</div>
+                  <div className="text-xs text-green-700">Clear search to see all tasks</div>
+                </>
+              ) : (
+                <>
+                  <div>NO TASKS FOUND</div>
+                  <div className="text-xs">Use terminal to add tasks</div>
+                  <div className="text-xs text-green-700">$ add <task description></div>
+                </>
+              )}
             </div>
           </div>
         ) : (
@@ -141,6 +177,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask }
       <div className="p-4 border-t border-green-500 bg-black">
         <div className="text-xs text-green-600 space-y-1">
           <div>QUICK ACTIONS:</div>
+          <div>• Use search box to filter tasks</div>
           <div>• Hover over tasks to see controls</div>
           <div>• Use terminal for full command set</div>
         </div>
