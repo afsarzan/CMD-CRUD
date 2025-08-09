@@ -3,7 +3,11 @@ import { TerminalOutput, Task } from '../types/Task';
 import { loadTasks, addTask, toggleTask, deleteTask, clearAllTasks } from '../utils/localStorage';
 import { Terminal as TerminalIcon } from 'lucide-react';
 
-const Terminal: React.FC = () => {
+interface TerminalProps {
+  onTasksChange: () => void;
+}
+
+const Terminal: React.FC<TerminalProps> = ({ onTasksChange }) => {
   const [output, setOutput] = useState<TerminalOutput[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -81,6 +85,7 @@ const Terminal: React.FC = () => {
         } else {
           const task = addTask(argString);
           addOutput('output', `Task added: ${task.text}`);
+          onTasksChange();
         }
         break;
 
@@ -108,6 +113,7 @@ const Terminal: React.FC = () => {
             const task = toggleTask(tasks[taskIndex].id);
             if (task && task.completed) {
               addOutput('output', `Task marked as completed: ${task.text}`);
+              onTasksChange();
             } else {
               addOutput('error', 'Failed to mark task as completed.');
             }
@@ -128,6 +134,7 @@ const Terminal: React.FC = () => {
             if (task.completed) {
               toggleTask(task.id);
               addOutput('output', `Task marked as incomplete: ${task.text}`);
+              onTasksChange();
             } else {
               addOutput('output', `Task is already incomplete: ${task.text}`);
             }
@@ -148,6 +155,7 @@ const Terminal: React.FC = () => {
             const success = deleteTask(taskToDelete.id);
             if (success) {
               addOutput('output', `Task deleted: ${taskToDelete.text}`);
+              onTasksChange();
             } else {
               addOutput('error', 'Failed to delete task.');
             }
@@ -162,6 +170,7 @@ const Terminal: React.FC = () => {
       case 'reset':
         clearAllTasks();
         addOutput('output', 'All tasks have been deleted.');
+        onTasksChange();
         break;
 
       default:
@@ -202,8 +211,7 @@ const Terminal: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-green-400 font-mono p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-full bg-black text-green-400 font-mono p-4 flex flex-col">
         {/* Terminal Header */}
         <div className="flex items-center gap-2 mb-4 text-green-300">
           <TerminalIcon size={20} />
@@ -213,7 +221,7 @@ const Terminal: React.FC = () => {
         {/* Terminal Output */}
         <div 
           ref={outputRef}
-          className="bg-gray-900 border border-green-500 rounded-lg p-4 h-96 overflow-y-auto mb-4 shadow-lg"
+          className="bg-gray-900 border border-green-500 rounded-lg p-4 flex-1 overflow-y-auto mb-4 shadow-lg"
         >
           {output.map((item) => (
             <div 
@@ -249,7 +257,6 @@ const Terminal: React.FC = () => {
           <p>• Click anywhere to focus the terminal</p>
           <p>• All tasks are saved locally in your browser</p>
         </div>
-      </div>
     </div>
   );
 };
