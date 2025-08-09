@@ -1,6 +1,6 @@
 import React from 'react';
 import { Task } from '../types/Task';
-import { CheckCircle, Circle, Trash2, Calendar } from 'lucide-react';
+import { Terminal as TerminalIcon } from 'lucide-react';
 
 interface TaskListProps {
   tasks: Task[];
@@ -21,74 +21,90 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask }
   };
 
   const TaskItem: React.FC<{ task: Task; index: number }> = ({ task, index }) => (
-    <div className={`group p-3 rounded-lg border transition-all duration-200 hover:shadow-md ${
-      task.completed 
-        ? 'bg-green-50 border-green-200 hover:bg-green-100' 
-        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-    }`}>
+    <div className="group hover:bg-gray-800 transition-colors duration-200 p-2 rounded">
       <div className="flex items-start gap-3">
-        <button
-          onClick={() => onToggleTask(task.id)}
-          className={`mt-0.5 transition-colors duration-200 ${
-            task.completed ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-gray-600'
-          }`}
-        >
-          {task.completed ? <CheckCircle size={20} /> : <Circle size={20} />}
-        </button>
+        <span className="text-yellow-400 font-mono text-sm">{index + 1}.</span>
         
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium transition-all duration-200 ${
-            task.completed 
-              ? 'text-green-800 line-through opacity-75' 
-              : 'text-gray-900'
-          }`}>
-            <span className="text-xs text-gray-500 mr-2">#{index + 1}</span>
-            {task.text}
-          </p>
-          <div className="flex items-center gap-2 mt-1">
-            <Calendar size={12} className="text-gray-400" />
-            <span className="text-xs text-gray-500">{formatDate(task.createdAt)}</span>
+          <div className="flex items-center gap-2">
+            <span className={`font-mono text-sm ${
+              task.completed ? 'text-green-600' : 'text-green-400'
+            }`}>
+              [{task.completed ? '✓' : '○'}]
+            </span>
+            <span className={`font-mono text-sm ${
+              task.completed 
+                ? 'text-green-600 line-through opacity-75' 
+                : 'text-green-400'
+            }`}>
+              {task.text}
+            </span>
+          </div>
+          <div className="mt-1 text-xs text-green-600 font-mono">
+            Created: {formatDate(task.createdAt)}
           </div>
         </div>
         
-        <button
-          onClick={() => onDeleteTask(task.id)}
-          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all duration-200 p-1 rounded hover:bg-red-50"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
+          <button
+            onClick={() => onToggleTask(task.id)}
+            className="text-yellow-400 hover:text-yellow-300 font-mono text-xs px-2 py-1 border border-yellow-400 hover:border-yellow-300 rounded transition-colors duration-200"
+          >
+            {task.completed ? 'UNDO' : 'DONE'}
+          </button>
+          <button
+            onClick={() => onDeleteTask(task.id)}
+            className="text-red-400 hover:text-red-300 font-mono text-xs px-2 py-1 border border-red-400 hover:border-red-300 rounded transition-colors duration-200"
+          >
+            DEL
+          </button>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="h-full bg-white border-l border-gray-300 flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-lg font-semibold text-gray-800 mb-1">Task List</h2>
-        <p className="text-sm text-gray-600">
-          {tasks.length} total • {pendingTasks.length} pending • {completedTasks.length} completed
-        </p>
+    <div className="h-full bg-black text-green-400 font-mono flex flex-col border-l border-green-500">
+      {/* Terminal Header */}
+      <div className="flex items-center gap-2 p-4 border-b border-green-500 text-green-300">
+        <TerminalIcon size={20} />
+        <span className="text-sm">Task List - Status Monitor</span>
       </div>
 
-      {/* Task List */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Status Bar */}
+      <div className="p-4 border-b border-green-500 bg-gray-900">
+        <div className="text-xs space-y-1">
+          <div className="text-yellow-400">SYSTEM STATUS:</div>
+          <div className="text-green-400">
+            TOTAL: {tasks.length} | PENDING: {pendingTasks.length} | COMPLETED: {completedTasks.length}
+          </div>
+        </div>
+      </div>
+
+      {/* Task Display */}
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-900">
         {tasks.length === 0 ? (
-          <div className="text-center py-12">
-            <Circle size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">No tasks yet</p>
-            <p className="text-gray-400 text-xs mt-1">Use the terminal to add your first task</p>
+          <div className="text-center py-8">
+            <div className="text-green-600 font-mono text-sm space-y-2">
+              <div>NO TASKS FOUND</div>
+              <div className="text-xs">Use terminal to add tasks</div>
+              <div className="text-xs text-green-700">$ add &lt;task description&gt;</div>
+            </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-1">
+            {/* Header */}
+            <div className="text-yellow-400 font-mono text-xs mb-4 border-b border-green-700 pb-2">
+              ID  STATUS  DESCRIPTION
+            </div>
+
             {/* Pending Tasks */}
             {pendingTasks.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <Circle size={16} className="text-blue-500" />
-                  Pending ({pendingTasks.length})
-                </h3>
-                <div className="space-y-2">
+              <div className="mb-6">
+                <div className="text-blue-400 font-mono text-xs mb-2">
+                  &gt; PENDING TASKS ({pendingTasks.length})
+                </div>
+                <div className="space-y-1 ml-2">
                   {pendingTasks.map((task, index) => (
                     <TaskItem 
                       key={task.id} 
@@ -102,12 +118,11 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask }
 
             {/* Completed Tasks */}
             {completedTasks.length > 0 && (
-              <div className={pendingTasks.length > 0 ? 'mt-6' : ''}>
-                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <CheckCircle size={16} className="text-green-500" />
-                  Completed ({completedTasks.length})
-                </h3>
-                <div className="space-y-2">
+              <div>
+                <div className="text-green-600 font-mono text-xs mb-2">
+                  &gt; COMPLETED TASKS ({completedTasks.length})
+                </div>
+                <div className="space-y-1 ml-2">
                   {completedTasks.map((task, index) => (
                     <TaskItem 
                       key={task.id} 
@@ -120,6 +135,15 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleTask, onDeleteTask }
             )}
           </div>
         )}
+      </div>
+
+      {/* Command Help */}
+      <div className="p-4 border-t border-green-500 bg-black">
+        <div className="text-xs text-green-600 space-y-1">
+          <div>QUICK ACTIONS:</div>
+          <div>• Hover over tasks to see controls</div>
+          <div>• Use terminal for full command set</div>
+        </div>
       </div>
     </div>
   );
